@@ -1,0 +1,11 @@
+name = "wedding-rsvp"
+main = "api/rsvp.js"
+compatibility_date = "2026-05-13"
+
+# Замените значения ниже на свои
+[vars]
+GITHUB_OWNER = "your-github-username"
+GITHUB_REPO = "invite"
+GITHUB_BRANCH = "main"
+
+# GITHUB_TOKEN — установите через: wrangler secret put GITHUB_TOKEN

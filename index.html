@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сергей &amp; Эльвира · 13 · 09 · 2026</title>
+  <meta name="description"
+  content="Вы приглашены на свадьбу Сергея и Эльвиры — 13 сентября 2026 года. Подтвердите своё присутствие." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- INTRO / OPENER -->
+  <div class="splash" id="splash">
+    <div class="splash-inner">
+      <p class="splash-script">Our wedding day!</p>
+      <p class="splash-date">13 · 09 · 26</p>
+      <h1 class="splash-invite">Вы приглашены на свадьбу!</h1>
+      <div class="splash-slider" id="splashSlider">
+        <div class="splash-slider-track">
+          <div class="splash-slider-thumb animated" id="splashThumb">→</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="curtains" id="curtains"></div>
+
+  <!-- MAIN SITE (hidden until splash closed) -->
+  <div class="site" id="site">
+    <div class="mobile-confirm">
+      <a href="#rsvp" class="btn-red">Подтвердить присутствие</a>
+    </div>
+
+    <!-- NAV -->
+    <nav class="nav" id="nav">
+      <div class="nav-brand">C &amp; Э</div>
+      <button class="nav-burger" id="navBurger" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#invite" class="nav-link">Приглашение</a></li>
+        <li><a href="#calendar" class="nav-link">Дата</a></li>
+        <li><a href="#location" class="nav-link">Место проведения</a></li>
+        <li><a href="#program" class="nav-link">Расписание</a></li>
+        <li><a href="#dress" class="nav-link">Дресс-код</a></li>
+        <li><a href="#wishes" class="nav-link">Пожелания</a></li>
+        <li><a href="#rsvp" class="nav-link">Анкета</a></li>
+      </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero-line-bg" aria-hidden="true"></div>
+      <div class="hero-center">
+        <p class="hero-date reveal-up">13 · 09 · 26</p>
+        <h1 class="hero-names reveal-up">
+          Сергей &amp;<br />Эльвира
+        </h1>
+        <p class="hero-script reveal-up">Our wedding day!</p>
+        <div class="hero-poster reveal-up" aria-label="Фото пары"></div>
+        <a href="#invite" class="hero-scroll-hint reveal-up">Листайте вниз</a>
+      </div>
+    </section>
+
+    <!-- INVITE LETTER -->
+    <section class="invite-section" id="invite">
+      <div class="envelope-wrap reveal-up">
+        <h2 class="invite-title">Дорогие родные и друзья!</h2>
+        <img class="invite-envelope-image" src="images/envelop.png" alt="Свадебный конверт" />
+        <div class="invite-note">
+          <p>
+            Совсем скоро состоится наша свадьба, и мы будем ещё счастливее, если вы разделите с нами этот чудесный день!
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="calendar-section" id="calendar">
+      <div class="calendar-stage reveal-up">
+        <img class="calendar-image" src="images/calendar.jpeg" alt="Свадебный календарь" />
+        <img class="calendar-heart" src="images/heart.png" alt="" aria-hidden="true" />
+      </div>  
+    </section>
+
+    <!-- LOCATION -->
+    <section class="location-section" id="location">
+      <div class="location-wrap reveal-up">
+        <h2 class="location-title">Место<br />проведения</h2>
+        <p class="location-script">Save the place!</p>
+        <p class="location-address">г. Ростов-на-Дону, Левобережная улица, д. 3В<br />Загородный клуб, левый зал</p>
+        <img class="location-photo" src="images/place.jpg" alt="Фото места проведения" />
+        <a href="https://yandex.ru/maps/-/CPSPjYm0" target="_blank" rel="noopener" class="location-route-btn">как добраться</a>
+      </div>
+    </section>
+
+    <!-- PROGRAM -->
+    <section class="program-section" id="program">
+      <h2 class="program-title reveal-up">Тайминг</h2>
+      <div class="program-layout reveal-up">
+        <div class="program-visual">
+          <img class="program-desktop" src="images/timing_horizontal.png" alt="Тайминг мероприятия" />
+          <img class="program-mobile" src="images/timing_vertical.png" alt="Тайминг мероприятия" />
+        </div>
+        <div class="program-captions" aria-label="Расписание" style="height: 470px;">
+        <div class="program-point">
+          <div class="program-time">15:30</div>
+          <div class="program-label">Сбор гостей</div>
+        </div>
+        <div class="program-point">
+          <div class="program-time">16:30</div>
+          <div class="program-label">Церемония<br />регистрации</div>
+        </div>
+        <div class="program-point">
+          <div class="program-time">17:30</div>
+          <div class="program-label">Банкет</div>
+        </div>
+        <div class="program-point">
+          <div class="program-time">23:00</div>
+          <div class="program-label">Завершение вечера</div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- DRESS CODE -->
+    <section class="dress-section" id="dress">
+      <div class="dress-inner">
+        <h2 class="dress-title reveal-up">Дресс-код</h2>
+        <p class="dress-text reveal-up">
+          Для нас самое главное — ваше присутствие!<br />
+          Но мы будем очень признательны, если вы поддержите цветовую гамму нашей свадьбы.
+        </p>
+
+        <div class="dress-colors reveal-up" aria-label="Цветовая палитра">
+          <span class="dress-color" style="--dress-color-image:url('images/color1.jpg')" aria-hidden="true"></span>
+          <span class="dress-color" style="--dress-color-image:url('images/color2.jpg')" aria-hidden="true"></span>
+          <span class="dress-color" style="--dress-color-image:url('images/color3.jpg')" aria-hidden="true"></span>
+          <span class="dress-color" style="--dress-color-image:url('images/color4.jpg')" aria-hidden="true"></span>
+          <span class="dress-color" style="--dress-color-image:url('images/color5.jpg')" aria-hidden="true"></span>
+        </div>
+        <div class="dress-subtitle reveal-up">Для женщин: пожалуйста, воздержитесь от белого и чёрного цветов</div>
+        <div class="dress-subtitle reveal-up">Для мужчин: так же возможны костюмы тёмных тонов с белыми рубашками</div>
+      </div>
+    </section>
+
+    <!-- WISHES -->
+    <section class="wishes-section" id="wishes">
+      <div class="wishes-inner reveal-up">
+        <h2 class="wishes-title">Пожелания</h2>
+        <p class="wishes-script">Our wishes</p>
+        <div class="wishes-slider" aria-live="polite">
+          <button class="wishes-arrow" id="wishPrev" type="button" aria-label="Предыдущее пожелание">←</button>
+          <p class="wishes-text" id="wishText">
+            Ваши улыбки и смех подарят нам незабываемое счастье в этот день, а пожелания в конвертах помогут осуществить наши мечты!
+          </p>
+          <button class="wishes-arrow" id="wishNext" type="button" aria-label="Следующее пожелание">→</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RSVP -->
+    <section class="rsvp-section" id="rsvp">
+      <div class="rsvp-header reveal-up">
+        <h2 class="section-title-bold">Анкета гостя</h2>
+        <span class="section-label">Пожалуйста, ответьте до 1 августа 2026</span>
+      </div>
+
+      <form class="rsvp-form rsvp-ref" id="rsvpForm" novalidate>
+        
+        <div class="rsvp-q reveal-up">
+          <label for="guestName" class="rsvp-q-title">1. Имя и фамилия</label>
+          <input type="text" id="guestName" name="guestName" class="rsvp-line-input" required />
+          <span class="f-error" id="guestNameErr"></span>
+        </div>
+
+        <div class="rsvp-q reveal-up">
+          <p class="rsvp-q-title">2. Сможете присутствовать на празднике?</p>
+          <div class="rsvp-radio-list">
+            <label class="rsvp-radio-option">
+              <input type="radio" name="attendance" value="yes" />
+              <span>Да, с удовольствием</span>
+            </label>
+            <label class="rsvp-radio-option">
+              <input type="radio" name="attendance" value="no" />
+              <span>Не смогу</span>
+            </label>
+          </div>
+          <span class="f-error" id="attendanceErr"></span>
+        </div>
+
+        <div class="rsvp-q rsvp-followup reveal-up" data-rsvp-followup hidden>
+          <label for="allergies" class="rsvp-q-title">3. Есть ли у Вас какая-либо пищевая непереносимость или аллергия?</label>
+          <textarea id="allergies" name="allergies" rows="1" class="rsvp-line-input" required></textarea>
+          <span class="f-error" id="allergiesErr"></span>
+        </div>
+
+        <div class="rsvp-q rsvp-followup reveal-up" data-rsvp-followup hidden>
+          <p class="rsvp-q-title">4. Предпочтения по напиткам</p>
+          <div class="rsvp-drinks-grid">
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="champagne" /><span>Шампанское</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="rum" /><span>Ром</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="white-wine" /><span>Белое вино</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="red-wine" /><span>Красное вино</span></label>
+            <label class="rsvp-check-option wine-sub"><input type="checkbox" name="drinks" value="dry-white" disabled /><span>Сухое белое</span></label>
+            <label class="rsvp-check-option wine-sub"><input type="checkbox" name="drinks" value="dry-red" disabled /><span>Сухое красное</span></label>
+            <label class="rsvp-check-option wine-sub"><input type="checkbox" name="drinks" value="semi-white" disabled /><span>Полусладкое белое</span></label>
+            <label class="rsvp-check-option wine-sub"><input type="checkbox" name="drinks" value="semi-red" disabled /><span>Полусладкое красное</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="vodka" /><span>Водка</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="cognac" /><span>Коньяк</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="whiskey" /><span>Виски</span></label>
+            <label class="rsvp-check-option"><input type="checkbox" name="drinks" value="none" id="drinkNone" /><span>Не пью алкоголь</span></label>
+          </div>
+          <span class="f-error" id="drinksErr"></span>
+        </div>  
+
+        <div class="rsvp-q rsvp-followup reveal-up" data-rsvp-followup hidden>
+          <label for="extraInfo" class="rsvp-q-title">5. Место для дополнительных сведений (необязательно к заполнению)</label>
+          <textarea id="extraInfo" name="extraInfo" rows="1" class="rsvp-line-input" placeholder="Ваш ответ"></textarea>
+        </div>
+
+        <div class="f-submit reveal-up">
+          <button type="submit" class="rsvp-submit-btn" id="submitBtn">ОТПРАВИТЬ</button>
+        </div>
+      </form>
+
+      <div class="rsvp-submitted" id="rsvpSubmitted" hidden>
+        <p class="rsvp-submitted-text">Анкета отправлена!</p>
+        <button type="button" class="rsvp-submit-btn" id="rsvpResubmitBtn">Заполнить анкету ещё раз</button>
+      </div>
+
+    </section>
+
+    <div class="rsvp-notice rsvp-notice--success" id="successMsg" role="status" aria-live="polite">Спасибо за ответ!</div>
+    <div class="rsvp-notice rsvp-notice--error" id="errorMsg" role="alert" aria-live="assertive">Ошибка. Проверьте данные и попробуйте снова.</div>
+
+
+    <!-- COUNTDOWN -->
+    <section class="countdown-section">
+      <div class="countdown-label">До свадьбы осталось</div>
+      <div class="countdown" id="countdown">
+        <div class="cd-item">
+          <span class="cd-num" id="days">00</span>
+          <span class="cd-unit">дней</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-item">
+          <span class="cd-num" id="hours">00</span>
+          <span class="cd-unit">часов</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-item">
+          <span class="cd-num" id="minutes">00</span>
+          <span class="cd-unit">минут</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-item">
+          <span class="cd-num" id="seconds">00</span>
+          <span class="cd-unit">секунд</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-mono">С &amp; Э</div>
+      <p class="footer-date">13 · 09 · 2026</p>
+      <p class="footer-script">Our wedding day!</p>
+      <div class="footer-sep"></div>
+      <p class="footer-contacts">
+        <a href="tel:+79991234567">+7 (952) 575-31-87</a> ·
+        <a href="mailto:wedding@example.com">sergey_savinkov@mail.ru</a>
+      </p>
+      <p class="footer-contacts">
+        <a href="tel:+79991234567">+7 (909) 752-16-49</a> ·
+        <a href="mailto:wedding@example.com">savkina.elya@mail.ru</a>
+      </p>
+      <p class="footer-heart">С любовью ждём вас ❤</p>
+    </footer>
+
+  </div><!-- /site -->
+
+  <script src="script.js"></script>
+</body>
+
+</html>
