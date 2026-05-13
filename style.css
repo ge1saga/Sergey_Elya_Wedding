@@ -718,8 +718,6 @@ section {
   width: clamp(54px, 8vw, 78px);
   height: clamp(54px, 8vw, 78px);
   border-radius: 999px;
-  background-color: #f3ece4;
-  background-image: var(--dress-color-image);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
