@@ -15,7 +15,7 @@ const wishPrev = document.getElementById("wishPrev");
 const wishNext = document.getElementById("wishNext");
 const wishText = document.getElementById("wishText");
 
-const RSVP_WORKER_URL = "https://wedding-rsvp.your-username.workers.dev";
+const RSVP_WORKER_URL = "https://wedding-rsvp.ge1saga.workers.dev";
 
 const dayEl = document.getElementById("days");
 const hourEl = document.getElementById("hours");
