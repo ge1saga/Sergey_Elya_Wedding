@@ -387,11 +387,19 @@ function validateForm() {
   return isValid;
 }
 
+function generateId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
 function getFormData() {
   const fd = new FormData(rsvpForm);
   const entries = Object.fromEntries(fd.entries());
   entries.drinks = fd.getAll("drinks");
   entries.submitted_at = new Date().toISOString();
+  entries.requestId = generateId();
   return entries;
 }
 
@@ -430,6 +438,13 @@ function setupForm() {
       if (!res.ok) {
         const text = await res.text();
         console.error("RSVP send error:", text);
+
+        if (res.status === 409) {
+          errorMsg.textContent = "Слишком много одновременных отправок. Попробуйте снова.";
+        } else {
+          errorMsg.textContent = "Ошибка. Проверьте данные и попробуйте снова.";
+        }
+
         showNotice(errorMsg);
         submitBtn.disabled = false;
         submitBtn.textContent = "ОТПРАВИТЬ";
@@ -437,6 +452,7 @@ function setupForm() {
       }
     } catch (err) {
       console.error("RSVP network error:", err);
+      errorMsg.textContent = "Ошибка соединения. Проверьте интернет и попробуйте снова.";
       showNotice(errorMsg);
       submitBtn.disabled = false;
       submitBtn.textContent = "ОТПРАВИТЬ";

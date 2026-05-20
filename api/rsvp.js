@@ -19,16 +19,6 @@ export default {
       const now = new Date().toISOString();
       data.submitted_at = now;
 
-      const drinks = Array.isArray(data.drinks) ? data.drinks.join("; ") : (data.drinks || "");
-      const row = [
-        escapeCsv(data.submitted_at),
-        escapeCsv(data.guestName || ""),
-        escapeCsv(data.attendance || ""),
-        escapeCsv(data.allergies || ""),
-        escapeCsv(drinks),
-        escapeCsv(data.extraInfo || "")
-      ].join(",");
-
       const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH } = env;
 
       if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO || !GITHUB_BRANCH) {
@@ -45,51 +35,100 @@ export default {
         Accept: "application/vnd.github.v3+json"
       };
 
+      const drinks = Array.isArray(data.drinks) ? data.drinks.join("; ") : (data.drinks || "");
+      const row = [
+        escapeCsv(data.submitted_at),
+        escapeCsv(data.guestName || ""),
+        escapeCsv(data.attendance || ""),
+        escapeCsv(data.allergies || ""),
+        escapeCsv(drinks),
+        escapeCsv(data.extraInfo || ""),
+        escapeCsv(data.requestId || "")
+      ].join(",");
+
+      const header = "submitted_at,guestName,attendance,allergies,drinks,extraInfo,requestId\n";
+
       let sha = null;
       let existingContent = "";
 
-      const getResp = await fetch(`${apiUrl}?ref=${GITHUB_BRANCH}`, { headers: ghHeaders });
-
-      if (getResp.ok) {
-        const file = await getResp.json();
-        sha = file.sha;
-        existingContent = decodeUTF8(file.content);
-      } else if (getResp.status !== 404) {
-        const err = await getResp.text();
-        return new Response(`GitHub read error: ${err}`, {
-          status: 502,
-          headers: CORS_HEADERS
-        });
-      }
-
-      const header = "submitted_at,guestName,attendance,allergies,drinks,extraInfo\n";
-      const newContent = existingContent === ""
-        ? header + row + "\n"
-        : existingContent.trimEnd() + "\n" + row + "\n";
-
-      const body = {
-        message: `RSVP: ${data.guestName} (${now})`,
-        content: encodeUTF8(newContent),
-        branch: GITHUB_BRANCH
+      const readFile = async () => {
+        const resp = await fetch(`${apiUrl}?ref=${GITHUB_BRANCH}`, { headers: ghHeaders });
+        if (resp.ok) {
+          const file = await resp.json();
+          sha = file.sha;
+          existingContent = decodeUTF8(file.content);
+          return true;
+        }
+        if (resp.status === 404) {
+          sha = null;
+          existingContent = "";
+          return true;
+        }
+        const err = await resp.text();
+        return err;
       };
-      if (sha) body.sha = sha;
 
-      const putResp = await fetch(apiUrl, {
-        method: "PUT",
-        headers: ghHeaders,
-        body: JSON.stringify(body)
-      });
-
-      if (!putResp.ok) {
-        const err = await putResp.text();
-        return new Response(`GitHub write error: ${err}`, {
+      const readResult = await readFile();
+      if (readResult !== true) {
+        return new Response(`GitHub read error: ${readResult}`, {
           status: 502,
           headers: CORS_HEADERS
         });
       }
 
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) {
+          const reReadResult = await readFile();
+          if (reReadResult !== true) {
+            return new Response(`GitHub re-read error: ${reReadResult}`, {
+              status: 502,
+              headers: CORS_HEADERS
+            });
+          }
+        }
+
+        if (data.requestId && existingContent.includes(data.requestId)) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+          });
+        }
+
+        const newContent = existingContent === ""
+          ? header + row + "\n"
+          : existingContent.trimEnd() + "\n" + row + "\n";
+
+        const body = {
+          message: `RSVP: ${data.guestName} (${now})`,
+          content: encodeUTF8(newContent),
+          branch: GITHUB_BRANCH
+        };
+        if (sha) body.sha = sha;
+
+        const putResp = await fetch(apiUrl, {
+          method: "PUT",
+          headers: ghHeaders,
+          body: JSON.stringify(body)
+        });
+
+        if (putResp.ok) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+          });
+        }
+
+        if (putResp.status !== 409) {
+          const err = await putResp.text();
+          return new Response(`GitHub write error: ${err}`, {
+            status: 502,
+            headers: CORS_HEADERS
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: false, error: "too many concurrent submissions" }), {
+        status: 409,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
       });
     } catch (err) {
