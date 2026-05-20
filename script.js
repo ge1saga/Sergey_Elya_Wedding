@@ -408,13 +408,24 @@ function getFormData() {
   return entries;
 }
 
+async function fetchWithTimeout(url, options, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function pollForRequestId(requestId) {
   const checkUrl = new URL("/check", RSVP_WORKER_URL);
   checkUrl.searchParams.set("requestId", requestId);
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 6; i++) {
     await wait(2000);
     try {
-      const res = await fetch(checkUrl.toString());
+      const res = await fetchWithTimeout(checkUrl.toString(), {}, 5000);
       if (res.ok) {
         const data = await res.json();
         if (data.found) return true;
@@ -427,6 +438,7 @@ async function pollForRequestId(requestId) {
 
 function setupForm() {
   let noticeTimer = null;
+  let polling = false;
   const showNotice = (el) => {
     if (!el) return;
     if (noticeTimer) window.clearTimeout(noticeTimer);
@@ -457,23 +469,29 @@ function setupForm() {
       return;
     }
 
+    if (polling) return;
+
     submitBtn.disabled = true;
     submitBtn.textContent = "Отправляем...";
 
     const payload = getFormData();
 
     try {
-      const res = await fetch(RSVP_WORKER_URL, {
+      const res = await fetchWithTimeout(RSVP_WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
-      });
+      }, 10000);
 
       if (!res.ok) {
         const text = await res.text();
         console.error("RSVP send error:", text);
 
+        polling = true;
+        submitBtn.textContent = "Проверка...";
         const found = await pollForRequestId(payload.requestId);
+        polling = false;
+
         if (found) {
           handleSuccess();
           return;
@@ -490,7 +508,11 @@ function setupForm() {
     } catch (err) {
       console.error("RSVP network error:", err);
 
+      polling = true;
+      submitBtn.textContent = "Проверка...";
       const found = await pollForRequestId(payload.requestId);
+      polling = false;
+
       if (found) {
         handleSuccess();
         return;
