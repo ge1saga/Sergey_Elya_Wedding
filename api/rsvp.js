@@ -4,10 +4,74 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type"
 };
 
+function ghConfig(env) {
+  const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH } = env;
+  if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO || !GITHUB_BRANCH) return null;
+  return {
+    apiUrl: `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rsvp.csv`,
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      "User-Agent": "wedding-rsvp-worker",
+      Accept: "application/vnd.github.v3+json"
+    },
+    branch: GITHUB_BRANCH
+  };
+}
+
+async function checkRequestId(requestId, gh) {
+  const resp = await fetch(`${gh.apiUrl}?ref=${gh.branch}`, { headers: gh.headers });
+  if (resp.status === 404) return false;
+  if (!resp.ok) {
+    const err = await resp.text();
+    console.error("GitHub read error in check:", err);
+    return false;
+  }
+  const file = await resp.json();
+  const content = decodeUTF8(file.content);
+  return content.includes(requestId);
+}
+
+async function readFile(gh) {
+  const resp = await fetch(`${gh.apiUrl}?ref=${gh.branch}`, { headers: gh.headers });
+  if (resp.ok) {
+    const file = await resp.json();
+    return { sha: file.sha, content: decodeUTF8(file.content) };
+  }
+  if (resp.status === 404) {
+    return { sha: null, content: "" };
+  }
+  const err = await resp.text();
+  return { error: err };
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    const url = new URL(request.url);
+
+    if (request.method === "GET" && url.pathname === "/check") {
+      const requestId = url.searchParams.get("requestId");
+      if (!requestId) {
+        return new Response(JSON.stringify({ found: false }), {
+          status: 400,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+        });
+      }
+      const gh = ghConfig(env);
+      if (!gh) {
+        return new Response(JSON.stringify({ found: false }), {
+          status: 200,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+        });
+      }
+      const found = await checkRequestId(requestId, gh);
+      return new Response(JSON.stringify({ found }), {
+        status: 200,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+      });
     }
 
     if (request.method !== "POST") {
@@ -19,21 +83,13 @@ export default {
       const now = new Date().toISOString();
       data.submitted_at = now;
 
-      const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH } = env;
-
-      if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO || !GITHUB_BRANCH) {
+      const gh = ghConfig(env);
+      if (!gh) {
         return new Response("Server config error: missing environment variables", {
           status: 500,
           headers: CORS_HEADERS
         });
       }
-
-      const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rsvp.csv`;
-      const ghHeaders = {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        "User-Agent": "wedding-rsvp-worker",
-        Accept: "application/vnd.github.v3+json"
-      };
 
       const drinks = Array.isArray(data.drinks) ? data.drinks.join("; ") : (data.drinks || "");
       const row = [
@@ -47,44 +103,31 @@ export default {
       ].join(",");
 
       const header = "submitted_at,guestName,attendance,allergies,drinks,extraInfo,requestId\n";
+      const apiUrl = gh.apiUrl;
+      const ghHeaders = gh.headers;
 
-      let sha = null;
-      let existingContent = "";
-
-      const readFile = async () => {
-        const resp = await fetch(`${apiUrl}?ref=${GITHUB_BRANCH}`, { headers: ghHeaders });
-        if (resp.ok) {
-          const file = await resp.json();
-          sha = file.sha;
-          existingContent = decodeUTF8(file.content);
-          return true;
-        }
-        if (resp.status === 404) {
-          sha = null;
-          existingContent = "";
-          return true;
-        }
-        const err = await resp.text();
-        return err;
-      };
-
-      const readResult = await readFile();
-      if (readResult !== true) {
-        return new Response(`GitHub read error: ${readResult}`, {
+      const firstRead = await readFile(gh);
+      if (firstRead.error) {
+        return new Response(`GitHub read error: ${firstRead.error}`, {
           status: 502,
           headers: CORS_HEADERS
         });
       }
 
+      let sha = firstRead.sha;
+      let existingContent = firstRead.content;
+
       for (let attempt = 0; attempt < 3; attempt++) {
         if (attempt > 0) {
-          const reReadResult = await readFile();
-          if (reReadResult !== true) {
-            return new Response(`GitHub re-read error: ${reReadResult}`, {
+          const retryRead = await readFile(gh);
+          if (retryRead.error) {
+            return new Response(`GitHub re-read error: ${retryRead.error}`, {
               status: 502,
               headers: CORS_HEADERS
             });
           }
+          sha = retryRead.sha;
+          existingContent = retryRead.content;
         }
 
         if (data.requestId && existingContent.includes(data.requestId)) {
@@ -101,7 +144,7 @@ export default {
         const body = {
           message: `RSVP: ${data.guestName} (${now})`,
           content: encodeUTF8(newContent),
-          branch: GITHUB_BRANCH
+          branch: gh.branch
         };
         if (sha) body.sha = sha;
 

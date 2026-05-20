@@ -394,13 +394,35 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
+let pendingRequestId = null;
+
 function getFormData() {
   const fd = new FormData(rsvpForm);
   const entries = Object.fromEntries(fd.entries());
   entries.drinks = fd.getAll("drinks");
   entries.submitted_at = new Date().toISOString();
-  entries.requestId = generateId();
+  if (!pendingRequestId) {
+    pendingRequestId = generateId();
+  }
+  entries.requestId = pendingRequestId;
   return entries;
+}
+
+async function pollForRequestId(requestId) {
+  const checkUrl = new URL("/check", RSVP_WORKER_URL);
+  checkUrl.searchParams.set("requestId", requestId);
+  for (let i = 0; i < 10; i++) {
+    await wait(2000);
+    try {
+      const res = await fetch(checkUrl.toString());
+      if (res.ok) {
+        const data = await res.json();
+        if (data.found) return true;
+      }
+    } catch {
+    }
+  }
+  return false;
 }
 
 function setupForm() {
@@ -414,6 +436,18 @@ function setupForm() {
     noticeTimer = window.setTimeout(() => {
       el.classList.remove("is-visible");
     }, 3000);
+  };
+
+  const handleSuccess = () => {
+    pendingRequestId = null;
+    rsvpForm.reset();
+    syncDrinkNoneExclusive();
+    applyFollowupQuestionsVisible(true);
+    submitBtn.disabled = false;
+    submitBtn.textContent = "ОТПРАВИТЬ";
+    showNotice(successMsg);
+    rsvpForm.hidden = true;
+    rsvpSubmitted.hidden = false;
   };
 
   rsvpForm?.addEventListener("submit", async (event) => {
@@ -439,12 +473,15 @@ function setupForm() {
         const text = await res.text();
         console.error("RSVP send error:", text);
 
-        if (res.status === 409) {
-          errorMsg.textContent = "Слишком много одновременных отправок. Попробуйте снова.";
-        } else {
-          errorMsg.textContent = "Ошибка. Проверьте данные и попробуйте снова.";
+        const found = await pollForRequestId(payload.requestId);
+        if (found) {
+          handleSuccess();
+          return;
         }
 
+        errorMsg.textContent = res.status === 409
+          ? "Слишком много одновременных отправок. Попробуйте снова."
+          : "Ошибка. Проверьте данные и попробуйте снова.";
         showNotice(errorMsg);
         submitBtn.disabled = false;
         submitBtn.textContent = "ОТПРАВИТЬ";
@@ -452,6 +489,13 @@ function setupForm() {
       }
     } catch (err) {
       console.error("RSVP network error:", err);
+
+      const found = await pollForRequestId(payload.requestId);
+      if (found) {
+        handleSuccess();
+        return;
+      }
+
       errorMsg.textContent = "Ошибка соединения. Проверьте интернет и попробуйте снова.";
       showNotice(errorMsg);
       submitBtn.disabled = false;
@@ -459,14 +503,7 @@ function setupForm() {
       return;
     }
 
-    rsvpForm.reset();
-    syncDrinkNoneExclusive();
-    applyFollowupQuestionsVisible(true);
-    submitBtn.disabled = false;
-    submitBtn.textContent = "ОТПРАВИТЬ";
-    showNotice(successMsg);
-    rsvpForm.hidden = true;
-    rsvpSubmitted.hidden = false;
+    handleSuccess();
   });
 
   rsvpResubmitBtn?.addEventListener("click", () => {
