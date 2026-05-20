@@ -265,14 +265,14 @@ section {
 .site::before {
   content: "";
   position: absolute;
-  top: 0;
+  top: var(--nav-h, 0px);
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 0;
   pointer-events: none;
   opacity: 0.65;
-  background: url("images/line-bg.svg") center top / 100% 100% no-repeat;
+  background: url("images/line-bg.svg") center center / cover no-repeat;
 }
 
 .site.is-ready {
@@ -364,13 +364,12 @@ section {
 
 /* Hero */
 .hero {
-  min-height: 100vh;
-  padding: max(15px, 2vh) 16px 130px;
+  min-height: min(100vh, 1080px);
+  padding: clamp(15px, 2vh, 30px) 16px 130px;
   position: relative;
   display: grid;
   place-items: center;
   overflow: visible;
-  background: #fff;
   z-index: 2;
 }
 
@@ -476,6 +475,8 @@ section {
   border-radius: 16px;
   background: #f0eded;
   border: 1px solid  #000000;
+  position: relative;
+  z-index: 1;
 }
 
 .cd-num {
@@ -883,10 +884,15 @@ section {
 
 .rsvp-form {
   margin-top: 22px;
+  margin-left: auto;
+  margin-right: auto;
+  width: min(100%, 1200px);
   background: #f0eded;
   border: 1px solid var(--line);
   border-radius: 22px;
   padding: clamp(16px, 2vw, 26px);
+  position: relative;
+  z-index: 1;
 }
 
 .f-block {
@@ -1268,6 +1274,10 @@ section {
 }
 
 @media (max-width: 600px) {
+  .site::before {
+    background: none;
+  }
+
   section {
     padding: 32px 16px;
   }

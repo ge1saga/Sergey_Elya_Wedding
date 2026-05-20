@@ -73,6 +73,10 @@ async function openInvitation() {
   await wait(820);
   splash.classList.add("hidden");
   site.classList.add("is-ready");
+  requestAnimationFrame(() => {
+    const nav = document.querySelector(".nav");
+    if (nav) site.style.setProperty("--nav-h", `${nav.offsetHeight}px`);
+  });
   window.scrollTo(0, 0);
   curtains?.classList.remove("is-closing");
   curtains?.classList.add("is-opening");
@@ -596,6 +600,17 @@ function setupProgramMobileCaptions() {
   applySoon();
 }
 
+function setupNavHeight() {
+  const nav = document.querySelector(".nav");
+  if (!nav) return;
+  function update() {
+    site.style.setProperty("--nav-h", `${nav.offsetHeight}px`);
+  }
+  update();
+  window.addEventListener("resize", update);
+}
+
+setupNavHeight();
 setupSplash();
 setupBurger();
 setupNavScroll();
