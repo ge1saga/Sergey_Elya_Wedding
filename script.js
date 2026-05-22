@@ -15,7 +15,9 @@ const wishPrev = document.getElementById("wishPrev");
 const wishNext = document.getElementById("wishNext");
 const wishText = document.getElementById("wishText");
 
-const RSVP_WORKER_URL = "https://wedding-rsvp.ge1saga.workers.dev";
+// API endpoint — для локального теста оставьте "/api/rsvp",
+// для продакшена замените на URL Yandex Cloud Function
+const API_URL = "https://d5ddkn2rpql7nrvqc6nu.ccx97b51.apigw.yandexcloud.net/api/rsvp";
 
 const dayEl = document.getElementById("days");
 const hourEl = document.getElementById("hours");
@@ -388,57 +390,20 @@ function validateForm() {
 }
 
 function generateId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
-
-let pendingRequestId = null;
 
 function getFormData() {
   const fd = new FormData(rsvpForm);
   const entries = Object.fromEntries(fd.entries());
   entries.drinks = fd.getAll("drinks");
   entries.submitted_at = new Date().toISOString();
-  if (!pendingRequestId) {
-    pendingRequestId = generateId();
-  }
-  entries.requestId = pendingRequestId;
+  entries.requestId = generateId();
   return entries;
-}
-
-async function fetchWithTimeout(url, options, ms) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function pollForRequestId(requestId) {
-  const checkUrl = new URL("/check", RSVP_WORKER_URL);
-  checkUrl.searchParams.set("requestId", requestId);
-  for (let i = 0; i < 6; i++) {
-    await wait(2000);
-    try {
-      const res = await fetchWithTimeout(checkUrl.toString(), {}, 5000);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.found) return true;
-      }
-    } catch {
-    }
-  }
-  return false;
 }
 
 function setupForm() {
   let noticeTimer = null;
-  let polling = false;
   const showNotice = (el) => {
     if (!el) return;
     if (noticeTimer) window.clearTimeout(noticeTimer);
@@ -451,7 +416,6 @@ function setupForm() {
   };
 
   const handleSuccess = () => {
-    pendingRequestId = null;
     rsvpForm.reset();
     syncDrinkNoneExclusive();
     applyFollowupQuestionsVisible(true);
@@ -469,55 +433,29 @@ function setupForm() {
       return;
     }
 
-    if (polling) return;
-
     submitBtn.disabled = true;
     submitBtn.textContent = "Отправляем...";
 
     const payload = getFormData();
 
     try {
-      const res = await fetchWithTimeout(RSVP_WORKER_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
-      }, 10000);
+      });
 
       if (!res.ok) {
-        const text = await res.text();
-        console.error("RSVP send error:", text);
-
-        polling = true;
-        submitBtn.textContent = "Проверка...";
-        const found = await pollForRequestId(payload.requestId);
-        polling = false;
-
-        if (found) {
-          handleSuccess();
-          return;
-        }
-
-        errorMsg.textContent = res.status === 409
-          ? "Слишком много одновременных отправок. Попробуйте снова."
-          : "Ошибка. Проверьте данные и попробуйте снова.";
+        const err = await res.text();
+        console.error("Server error:", err);
+        errorMsg.textContent = "Ошибка отправки. Попробуйте снова.";
         showNotice(errorMsg);
         submitBtn.disabled = false;
         submitBtn.textContent = "ОТПРАВИТЬ";
         return;
       }
     } catch (err) {
-      console.error("RSVP network error:", err);
-
-      polling = true;
-      submitBtn.textContent = "Проверка...";
-      const found = await pollForRequestId(payload.requestId);
-      polling = false;
-
-      if (found) {
-        handleSuccess();
-        return;
-      }
-
+      console.error("Network error:", err);
       errorMsg.textContent = "Ошибка соединения. Проверьте интернет и попробуйте снова.";
       showNotice(errorMsg);
       submitBtn.disabled = false;
