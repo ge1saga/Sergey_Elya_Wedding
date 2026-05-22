@@ -260,6 +260,7 @@ section {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.5s ease;
+  padding-top: var(--nav-h, 0px);
 }
 
 .site::before {
@@ -311,8 +312,10 @@ section {
 
 /* Nav */
 .nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   display: flex;
   align-items: center;
